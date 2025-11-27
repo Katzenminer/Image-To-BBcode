@@ -128,13 +128,16 @@ def brigthniss_increase(image):
 
 def createImage(filename):
     global useMaxSize
-    if isinstance(filename, str):
-        image = Image.open(filename)
-    elif isinstance(filename, Image.Image):
+    print("Processing image...")
+    if isinstance(filename, Image.Image):
         image = filename
     else:
-        if TESTMODE:print("Invalid image input")
-        return
+        image = Image.open(filename)
+    print(image)
+    print("Imagie selcteted:")
+    # else:
+    #     if TESTMODE:print("Invalid image input")
+    #     return
     if useMaxSize:
         pageDimensions = 42
         if TESTMODE:print("Page Dimision:",pageDimensions)
@@ -161,7 +164,7 @@ def createImage(filename):
                 total_pixels = newSize[0] * newSize[1]
                 newlines = newSize[1]
                 # Estimate: 10 chars per pixel + 1 char per newline
-                predictedSize = total_pixels * 10 + newlines * 1
+                predictedSize = total_pixels * 11 + newlines * 1
                 
                 if predictedSize < 10000:
                     size = newSize 
@@ -179,11 +182,11 @@ def createImage(filename):
         return "#{:02x}{:02x}{:02x}".format(*rgb)
 
     image = remove_background_and_crop(image)
-    image.save("debug imagies/1.bg_removed_cropped_image.png")
+    if TESTMODE:image.save("debug imagies/1.bg_removed_cropped_image.png")
     image = adjustSize(image, pageDimensions)
-    image.save("debug imagies/2.resized_image.png")
-    image = brigthniss_increase(image)
-    image.save("debug imagies/3.Fully_processed_image.png")
+    if TESTMODE:image.save("debug imagies/2.resized_image.png")
+    #image = brigthniss_increase(image)
+    if TESTMODE:image.save("debug imagies/3.Fully_processed_image.png")
     
     
     
@@ -265,7 +268,7 @@ def createImage(filename):
 
 
     pyperclip.copy(output)
-    if TESTMODE:print("Copied to clipboard")
+    print("Copied to clipboard")
 def open_file():
     global filename
     filename = filedialog.askopenfilename()
@@ -310,7 +313,8 @@ def check_clipboard():
         try:
             image = ImageGrab.grabclipboard()
             if isinstance(image, Image.Image):
-                if TESTMODE:print(image)
+                
+                print(image)
                 createImage(image)
         except Exception as e:
             if TESTMODE:print(f"Error: {e}")
@@ -350,7 +354,7 @@ if not TESTMODE:
         root.destroy()
     root.protocol("WM_DELETE_WINDOW", on_close)
     root.mainloop()
-else:
+elif TESTMODE:
     # TESTMODE operation
     useMaxSize = True
     test_image_path = "test_image.png"
