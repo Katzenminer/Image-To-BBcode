@@ -13,7 +13,68 @@ useNanochatSize = False
 filename = ""
 TESTMODE = False
 DEBUG_DIR = "debug imagies"
+def predict_bbcode_length(image,xlength):
+    """
+    Return estimated BBCode length using your own encoding rules
+    WITHOUT generating the actual string.
+    """
+    image = image.convert("RGB")
+    pixels = list(image.getdata())
+    width = xlength
 
+    NAMED_COLORS = {
+        (255,255,255): "white",
+        (0,0,0): "black",
+        (255,0,0): "red",
+        (0,255,0): "lime",
+        (0,0,255): "blue",
+        (255,255,0): "yellow",
+        (255,0,255): "magenta",
+        (0,255,255): "cyan",
+        (128,0,0): "maroon",
+        (0,128,0): "green",
+        (0,0,128): "navy",
+        (128,128,0): "olive",
+        (128,0,128): "purple",
+        (0,128,128): "teal",
+        (192,192,192): "silver",
+        (128,128,128): "gray",
+    }
+
+    def rgb_to_name(rgb):
+        if rgb in NAMED_COLORS:
+            return NAMED_COLORS[rgb]
+        return "#{:02x}{:02x}{:02x}".format(*rgb)
+
+    prev_color = None
+    total_len = 0
+    n = len(pixels)
+
+    for i, rgb in enumerate(pixels):
+        color_name = rgb_to_name(rgb)
+
+        # If color changes, open a new tag
+        if color_name != prev_color:
+            total_len += len("[color=" + color_name + "]")
+            prev_color = color_name
+
+        # Add pixel char
+        total_len += 1  # "█"
+
+        # Check next pixel for color closing logic
+        end_of_row = ((i + 1) % width == 0)
+        if end_of_row:
+            total_len += len("[/color]")  # ALWAYS close at row end
+            total_len += 1  # newline
+            prev_color = None
+            continue
+        else:
+            next_color = rgb_to_name(pixels[i+1])
+            if next_color != color_name:
+                total_len += len("[/color]")
+                prev_color = None
+
+    return total_len
 def remove_background_and_crop(pil_img, green_component_min_size=5):
     img = np.array(pil_img.convert("RGB"))
     h, w = img.shape[:2]
@@ -139,7 +200,7 @@ def createImage(filename):
     #     if TESTMODE:print("Invalid image input")
     #     return
     if useMaxSize:
-        pageDimensions = 42
+        pageDimensions = 43
         if TESTMODE:print("Page Dimision:",pageDimensions)
     if useNanochatSize:
         pageDimensions = 27
@@ -158,17 +219,12 @@ def createImage(filename):
             for i in range(pageDimensions):
                 newSize = [i]
                 newSize.append(int(0.55*(image.height * newSize[0] / image.width)))
-                
-                # More accurate character prediction for optimized BBcode
-                # Average: ~10 chars per pixel (includes color tags + newlines)
-                total_pixels = newSize[0] * newSize[1]
-                newlines = newSize[1]
-                # Estimate: 10 chars per pixel + 1 char per newline
-                predictedSize = total_pixels * 11 + newlines * 1
-                
-                if predictedSize < 10000:
-                    size = newSize 
-                if TESTMODE:print("size is now =",size)
+                if newSize[0]<=0 or newSize[1]<=0: continue
+                else:
+                    predictedSize = predict_bbcode_length(image.resize((newSize[0], newSize[1]), Image.NEAREST), newSize[0])
+                    if predictedSize <= 10000:
+                        size = newSize 
+                    if TESTMODE:print("size is now =",size)
 
         
         if TESTMODE:print(size)
@@ -193,13 +249,13 @@ def createImage(filename):
 
     
     NAMED_COLORS = {
+        
         (255,255,255): "white",
         (0,0,0): "black",
         (255,0,0): "red",
         (0,255,0): "lime",
         (0,0,255): "blue",
         (255,255,0): "yellow",
-        (255,0,255): "magenta",
         (0,255,255): "cyan",
         (128,0,0): "maroon",
         (0,128,0): "green",
