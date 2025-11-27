@@ -285,7 +285,7 @@ def createImage(filename):
     if TESTMODE:image.save("debug imagies/3.Fully_processed_image.png")
     image = speckCLeanup(image.convert("RGB"))
     if TESTMODE:image.save("3.Fully_processed_image.png")
-    image.save("3.Fully_processed_image.png")
+   
     
     
 
