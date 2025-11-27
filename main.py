@@ -13,6 +13,46 @@ useNanochatSize = False
 filename = ""
 TESTMODE = False
 DEBUG_DIR = "debug imagies"
+def speckCLeanup(pil_img):
+    img = np.array(pil_img)
+    h, w = img.shape[:2]
+
+    # --- Green detection ---
+    R = img[:, :, 0].astype(float)
+    G = img[:, :, 1].astype(float)
+    B = img[:, :, 2].astype(float)
+    green_mask = ((G / (np.maximum(R, B) + 1)) > 1.2).astype(np.uint8)
+    # --- Keep only specks meeting size + distance rules ---
+    def keep_only_specks_with_distance(mask, max_size=2, min_center_dist=20):
+        h, w = mask.shape
+        labeled, num = label(mask)
+        if num == 0:
+            return np.zeros_like(mask)
+
+        center_y = h / 2
+        center_x = w / 2
+        output = np.zeros_like(mask, dtype=bool)
+
+        for label_id in range(1, num + 1):
+            blob = (labeled == label_id)
+            size = blob.sum()
+            by, bx = center_of_mass(blob)
+            dist = np.sqrt((bx - center_x)**2 + (by - center_y)**2)
+
+            if size <= max_size and dist >= min_center_dist:
+                output[blob] = True
+
+        return output.astype(np.uint8)
+
+    cleaned_mask = keep_only_specks_with_distance(green_mask, max_size=5, min_center_dist=10)
+    cleaned_mask = cleaned_mask * 255
+    def apply_white_from_alpha(img, alpha_mask):
+        img_np = np.array(img).copy()
+        img_np[alpha_mask == 255] = [255, 255, 255]
+        return Image.fromarray(img_np, mode="RGB")
+
+    output = apply_white_from_alpha(pil_img, cleaned_mask)
+    return output 
 def predict_bbcode_length(image,xlength):
     """
     Return estimated BBCode length using your own encoding rules
@@ -243,7 +283,9 @@ def createImage(filename):
     if TESTMODE:image.save("debug imagies/2.resized_image.png")
     #image = brigthniss_increase(image)
     if TESTMODE:image.save("debug imagies/3.Fully_processed_image.png")
-    
+    image = speckCLeanup(image.convert("RGB"))
+    if TESTMODE:image.save("3.Fully_processed_image.png")
+    image.save("3.Fully_processed_image.png")
     
     
 
