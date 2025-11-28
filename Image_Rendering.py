@@ -3,15 +3,8 @@ import numpy as np
 from PIL import Image
 from scipy.ndimage import label, center_of_mass, binary_fill_holes, binary_erosion
 import pyperclip
-
-# ---------------------------
-# Configuration / Constants
-# ---------------------------
-
 TESTMODE = False
 DEBUG_DIR = "debug images"
-
-# Named color lookup for BBCode output
 named_colors = {
     (255, 255, 255): "white",
     (0, 0, 0): "black",
@@ -29,36 +22,19 @@ named_colors = {
     (192, 192, 192): "silver",
     (128, 128, 128): "gray",
 }
-
-# Global size mode flags
 useNormalSize = False
 useMaxSize = False
 useNanochatSize = False
-
-
-# ---------------------------
-# Green Detection
-# ---------------------------
-
 def detect_green(img_array):
-    """Return mask where green channel is significantly stronger."""
     r = img_array[:, :, 0].astype(float)
     g = img_array[:, :, 1].astype(float)
     b = img_array[:, :, 2].astype(float)
     return ((g / (np.maximum(r, b) + 1)) > 1.2).astype(np.uint8)
-
-
-# ---------------------------
-# Speck Cleanup
-# ---------------------------
-
 def speck_cleanup(pil_img):
-    """Remove isolated tiny green specks from the processed image."""
     img = np.array(pil_img)
     green_mask = detect_green(img)
 
     def keep_specks(mask, max_size=5, min_dist=10):
-        """Keep only small specks far from center."""
         h, w = mask.shape
         labeled, num = label(mask)
         if num == 0:
@@ -92,7 +68,6 @@ def speck_cleanup(pil_img):
 # ---------------------------
 
 def predict_bbcode_length(image, width):
-    """Estimate total BBCode size to avoid exceeding character limits."""
     image = image.convert("RGB")
     pixels = list(image.getdata())
 
@@ -122,14 +97,7 @@ def predict_bbcode_length(image, width):
                 prev_color = None
 
     return total
-
-
-# ---------------------------
-# Background Removal & Cropping
-# ---------------------------
-
 def remove_background_and_crop(pil_img, min_size=5):
-    """Detect green-screen border, fill sprite mask, crop transparency."""
     img = np.array(pil_img.convert("RGB"))
     green_mask = detect_green(img)
 
@@ -165,14 +133,7 @@ def remove_background_and_crop(pil_img, min_size=5):
     cropped[..., :3][cropped[..., 3] == 0] = 255
 
     return Image.fromarray(cropped, mode="RGBA")
-
-
-# ---------------------------
-# Resizing
-# ---------------------------
-
 def downscale_mode(img, size):
-    """Resize image using nearest-neighbor."""
     return img.resize(size, Image.NEAREST)
 
 
@@ -181,14 +142,6 @@ def downscale_mode(img, size):
 # ---------------------------
 
 def create_image(image_input):
-    """
-    Full processing pipeline:
-    - Remove background
-    - Auto-resize
-    - Cleanup specks
-    - Convert to BBCode
-    - Copy to clipboard
-    """
     global useMaxSize, useNormalSize, useNanochatSize
 
     # Load image
@@ -204,7 +157,6 @@ def create_image(image_input):
 
     # Resize logic
     def choose_size(raw, max_w):
-        """Select resized dimensions that fit BBCode limit."""
         if max_w == 27:
             return [27, int(27 * 0.55)]
 

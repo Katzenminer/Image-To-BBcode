@@ -8,51 +8,26 @@ from Image_Rendering import (
     useMaxSize,
     useNanochatSize,
 )
-
-# ---------------------------
-# Globals
-# ---------------------------
-
 filename = ""
 auto_convert_enabled = False
-
-
-# ---------------------------
-# File Handling
-# ---------------------------
-
 def open_file():
-    """Open file dialog and store selected file path."""
     global filename
     filename = filedialog.askopenfilename()
     if filename:
         print("Selected:", filename)
-
-
-# ---------------------------
-# Size Mode Selection
-# ---------------------------
-
 def select_normal_size():
-    """Set size mode: normal width."""
     global useNormalSize, useMaxSize, useNanochatSize
     useNormalSize = True
     useMaxSize = False
     useNanochatSize = False
     update_buttons()
-
-
 def select_max_size():
-    """Set size mode: maximum width."""
     global useNormalSize, useMaxSize, useNanochatSize
     useMaxSize = True
     useNormalSize = False
     useNanochatSize = False
     update_buttons()
-
-
 def select_nanochat_size():
-    """Set size mode: small / nanochat width."""
     global useNormalSize, useMaxSize, useNanochatSize
     useNanochatSize = True
     useMaxSize = False
@@ -61,18 +36,10 @@ def select_nanochat_size():
 
 
 def update_buttons():
-    """Visually update size selection buttons."""
     btnNormal.config(bg="darkgreen" if useNormalSize else "darkgray")
     btnMax.config(bg="darkgreen" if useMaxSize else "darkgray")
     btnNano.config(bg="darkgreen" if useNanochatSize else "darkgray")
-
-
-# ---------------------------
-# Auto-Conversion (Clipboard)
-# ---------------------------
-
 def toggle_auto_convert():
-    """Enable or disable clipboard auto-conversion."""
     global auto_convert_enabled
     auto_convert_enabled = not auto_convert_enabled
 
@@ -80,26 +47,16 @@ def toggle_auto_convert():
 
     if auto_convert_enabled:
         check_clipboard()
-
-
 def check_clipboard():
-    """Check clipboard every 1 second for new images."""
     if not auto_convert_enabled:
         return
-
     try:
         img = ImageGrab.grabclipboard()
         if isinstance(img, Image.Image):
             create_image(img)
     except Exception as e:
         print("Clipboard error:", e)
-
     root.after(1000, check_clipboard)
-
-
-# ---------------------------
-# GUI Setup
-# ---------------------------
 
 root = tk.Tk()
 root.title("Image to BBCode")
