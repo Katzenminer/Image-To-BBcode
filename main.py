@@ -1,5 +1,6 @@
-from Image_Rendering import TESTMODE, create_image
 import UI
+from Image_Rendering import TESTMODE, create_image
+
 
 def main():
     if TESTMODE:
@@ -7,5 +8,7 @@ def main():
         create_image("test_image.png")
     else:
         UI.run_gui()
+
+
 if __name__ == "__main__":
     main()

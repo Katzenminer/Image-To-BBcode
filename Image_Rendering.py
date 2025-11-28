@@ -25,6 +25,7 @@ named_colors = {
 useNormalSize = False
 useMaxSize = False
 useNanochatSize = False
+crop_to_border = False
 def detect_green(img_array):
     r = img_array[:, :, 0].astype(float)
     g = img_array[:, :, 1].astype(float)
@@ -142,7 +143,7 @@ def downscale_mode(img, size):
 # ---------------------------
 
 def create_image(image_input):
-    global useMaxSize, useNormalSize, useNanochatSize
+    global useMaxSize, useNormalSize, useNanochatSize,crop_to_border
 
     # Load image
     image = image_input if isinstance(image_input, Image.Image) else Image.open(image_input)
@@ -172,10 +173,10 @@ def create_image(image_input):
         return chosen
 
     # Pipeline steps
-    image = remove_background_and_crop(image)
+    if crop_to_border:image = remove_background_and_crop(image)
     new_size = choose_size(image, page_width)
     image = downscale_mode(image, new_size)
-    image = speck_cleanup(image.convert("RGB"))
+    if crop_to_border:image = speck_cleanup(image.convert("RGB"))
 
     # Generate BBCode
     pixels = list(image.getdata())

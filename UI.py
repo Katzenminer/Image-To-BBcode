@@ -1,13 +1,9 @@
 import tkinter as tk
 from tkinter import filedialog
-from PIL import ImageGrab, Image
-from Image_Rendering import (
-    create_image,
-    TESTMODE,
-    useNormalSize,
-    useMaxSize,
-    useNanochatSize,
-)
+from PIL import ImageGrab, Image, ImageTk
+import tkinter.font as tkFont
+import Image_Rendering as IR
+from Image_Rendering import create_image
 filename = ""
 auto_convert_enabled = False
 def open_file():
@@ -16,29 +12,28 @@ def open_file():
     if filename:
         print("Selected:", filename)
 def select_normal_size():
-    global useNormalSize, useMaxSize, useNanochatSize
-    useNormalSize = True
-    useMaxSize = False
-    useNanochatSize = False
+    IR.useNormalSize = True
+    IR.useMaxSize = False
+    IR.useNanochatSize = False
     update_buttons()
 def select_max_size():
-    global useNormalSize, useMaxSize, useNanochatSize
-    useMaxSize = True
-    useNormalSize = False
-    useNanochatSize = False
+    IR.useMaxSize = True
+    IR.useNormalSize = False
+    IR.useNanochatSize = False
     update_buttons()
 def select_nanochat_size():
-    global useNormalSize, useMaxSize, useNanochatSize
-    useNanochatSize = True
-    useMaxSize = False
-    useNormalSize = False
+    IR.useNanochatSize = True
+    IR.useMaxSize = False
+    IR.useNormalSize = False
     update_buttons()
-
-
+def enable_border_cropping():
+    IR.crop_to_border = not IR.crop_to_border
+    update_buttons()
 def update_buttons():
-    btnNormal.config(bg="darkgreen" if useNormalSize else "darkgray")
-    btnMax.config(bg="darkgreen" if useMaxSize else "darkgray")
-    btnNano.config(bg="darkgreen" if useNanochatSize else "darkgray")
+    btnNormal.config(bg="darkgreen" if IR.useNormalSize else "darkgray")
+    btnMax.config(bg="darkgreen" if IR.useMaxSize else "darkgray")
+    btnNano.config(bg="darkgreen" if IR.useNanochatSize else "darkgray")
+    btnGreenBorderSensetiv.config(bg="darkgreen" if IR.crop_to_border else "darkgray")
 def toggle_auto_convert():
     global auto_convert_enabled
     auto_convert_enabled = not auto_convert_enabled
@@ -58,12 +53,22 @@ def check_clipboard():
         print("Clipboard error:", e)
     root.after(1000, check_clipboard)
 
+
 root = tk.Tk()
+myFont = tkFont.Font(family="Arial", size=14, weight="bold")
 root.title("Image to BBCode")
 root.config(bg="black")
 root.geometry("400x500")
+backround_img = Image.open("backround_space.png")
+backround_img = backround_img.resize((400,500))
+tk_backround_img = ImageTk.PhotoImage(backround_img)
+backround = tk.Label(root, image=tk_backround_img)
+backround.pack()
 
-btnOpen = tk.Button(root, text="Open Image", command=open_file, bg="darkgray")
+
+
+btnOpen = tk.Button(root, text="Open Image", command=open_file, compound="center",font=myFont,borderwidth=0,bg="darkgray")
+btnOpen.pack()
 btnOpen.place(x=70, y=100, width=260, height=45)
 
 btnConvert = tk.Button(root, text="Convert", command=lambda: create_image(filename), bg="darkgray")
@@ -81,6 +86,8 @@ btnMax.place(x=136, y=250, width=126, height=45)
 btnNano = tk.Button(root, text="Nanochat Size", command=select_nanochat_size, bg="darkgray")
 btnNano.place(x=267, y=250, width=126, height=45)
 
+btnGreenBorderSensetiv = tk.Button(root, text="Crop to and Remove Green Border", command=enable_border_cropping, bg="darkgray")
+btnGreenBorderSensetiv.place(x=68, y=300, width=260, height=45)
 
 # ---------------------------
 # Entry Point
